@@ -11,7 +11,7 @@ interface PlayerListProps {
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({ deviceId }) => {
-    const { players, loading, error, visiblePlayers, selectedPlayer, handlePlayerSelect, setPlayers } = usePlayerList(deviceId);
+    const { players, loading, error, selectedPlayer, handlePlayerSelect, setPlayers } = usePlayerList(deviceId);
 
 
     if (loading) {
@@ -40,7 +40,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ deviceId }) => {
             ) : (
                 <>
                     <Row xs={1} md={2} lg={3} className="g-4">
-                        {visiblePlayers.map((player) => (
+                        {players.map((player) => (
                             player ? (
                                 <PlayerElement
                                     key={`${player.device_id}-${player.place}`}

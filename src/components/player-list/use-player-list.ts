@@ -4,57 +4,45 @@ import { getPlayersByDevice } from "../../services/apiService";
 
 export const usePlayerList = (deviceId: string) => {
     const [players, setPlayers] = useState<DevicePlace[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<DevicePlace | null>(null);
-    const [visiblePlayers, setVisiblePlayers] = useState<DevicePlace[]>([]);
 
-    useEffect(() => {
-        // Сброс выбранного игрока при изменении устройства
-        setSelectedPlayer(null);
-
-        const fetchPlayers = async () => {
-            try {
-                setLoading(true);
-                const data = await getPlayersByDevice(parseInt(deviceId));
-                setPlayers(data);
-                setError(null);
-            } catch (err) {
-                setError('Failed to load players. Please try again later.');
-                console.error('Error fetching players:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (deviceId) {
-            fetchPlayers();
+    const fetchPlayers = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await getPlayersByDevice(Number(deviceId));
+            setPlayers(data);
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching players:", err);
+            setError("Failed to load players. Please try again later.");
+        } finally {
+            setLoading(false);
         }
     }, [deviceId]);
 
-    // Анимация появления игроков
     useEffect(() => {
-        if (players.length > 0) {
-            setVisiblePlayers([]); // Сброс перед новой анимацией
-            let index = 0;
-            const timer = setInterval(() => {
-                if (index < players.length) {
-                    setVisiblePlayers(prev => [...prev, players[index]]);
-                    index++;
-                } else {
-                    clearInterval(timer);
-                }
-            }, 50); // Показываем каждого игрока с интервалом 50мс
+        if (!deviceId) return;
+        setSelectedPlayer(null); // Сброс при смене устройства
+        fetchPlayers();
+    }, [deviceId, fetchPlayers]);
 
-            return () => clearInterval(timer);
+    useEffect(() => {
+        if (!selectedPlayer) return;
+
+        const updatedPlayer = players.find(
+            p => p.device_id === selectedPlayer.device_id && p.place === selectedPlayer.place
+        );
+
+        if (updatedPlayer && updatedPlayer !== selectedPlayer) {
+            setSelectedPlayer(updatedPlayer);
         }
     }, [players]);
-
 
     const handlePlayerSelect = useCallback((player: DevicePlace) => {
         setSelectedPlayer(player);
     }, []);
 
-
-    return { players, loading, error, selectedPlayer, visiblePlayers, setPlayers, handlePlayerSelect }
-}
+    return { players, loading, error, selectedPlayer, setPlayers, handlePlayerSelect };
+};
